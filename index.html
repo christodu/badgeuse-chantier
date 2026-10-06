@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pointage chantier</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone.svg">
+<link rel="apple-touch-icon" href="icone.svg">
+<meta name="theme-color" content="#1B3B5F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pointage">
+<style>
+:root{color-scheme:light dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<style>
+:root{
+  --bg:#E4E7EA; --surface:#FBFCFD; --surface-2:#EFF2F5; --line:#C9D0D7;
+  --ink:#14181C; --ink-2:#56606A; --ink-3:#8A939C;
+  --brand:#1B3B5F; --brand-ink:#FFFFFF; --header-bg:#1B3B5F; --header-ink:#F3F6F9;
+  --hivis:#F2C21A;
+  --ok:#0E7A50; --ok-bg:#DBEFE5;
+  --late:#BE4711; --late-bg:#FAE5D8;
+  --idle:#6F7883; --idle-bg:#E4E8EC;
+  --shadow:0 1px 2px rgba(20,24,28,.07), 0 8px 20px rgba(20,24,28,.05);
+  --r:12px;
+  --display:"Haettenschweiler","Arial Narrow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --body:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1216; --surface:#171B20; --surface-2:#1E242A; --line:#2B323A;
+  --ink:#E9ECEF; --ink-2:#A2ACB6; --ink-3:#737D87;
+  --brand:#93B9E0; --brand-ink:#0C1218; --header-bg:#171B20; --header-ink:#E9ECEF;
+  --hivis:#F2C21A;
+  --ok:#3FBE8A; --ok-bg:#10281F;
+  --late:#F1904F; --late-bg:#2C1B11;
+  --idle:#8A939C; --idle-bg:#21272D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 20px rgba(0,0,0,.28);
+}}
+:root[data-theme="dark"]{
+  --bg:#0F1216; --surface:#171B20; --surface-2:#1E242A; --line:#2B323A;
+  --ink:#E9ECEF; --ink-2:#A2ACB6; --ink-3:#737D87;
+  --brand:#93B9E0; --brand-ink:#0C1218; --header-bg:#171B20; --header-ink:#E9ECEF;
+  --hivis:#F2C21A;
+  --ok:#3FBE8A; --ok-bg:#10281F;
+  --late:#F1904F; --late-bg:#2C1B11;
+  --idle:#8A939C; --idle-bg:#21272D;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 20px rgba(0,0,0,.28);
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--hivis);outline-offset:2px}
+
+/* ---------- chrome ---------- */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--header-bg);color:var(--header-ink);
+  border-bottom:4px solid var(--hivis)}
+.top-in{max-width:560px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.mark{font-family:var(--display);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--hivis);border:1.5px solid var(--hivis);border-radius:4px;padding:1px 6px;flex:none}
+.top h1{font-family:var(--display);font-weight:700;letter-spacing:-.01em;font-size:22px;letter-spacing:.01em;margin:0;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock{font-family:var(--display);font-weight:600;font-size:22px;font-variant-numeric:tabular-nums;flex:none}
+
+.wrap{max-width:560px;margin:0 auto;padding:0 16px 104px}
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding-block:10px;color:var(--ink-2);font-size:12.5px}
+.sync{display:inline-flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line);
+  border-radius:999px;padding:3px 9px;font-size:12px;color:var(--ink-2)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);flex:none}
+.dot.off{background:var(--idle)}.dot.warn{background:var(--late)}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--surface);border-top:1px solid var(--line);
+  padding:0 8px calc(6px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;gap:2px}
+nav.tabs button{flex:1;max-width:140px;background:none;border:0;padding:9px 4px 5px;display:flex;flex-direction:column;
+  align-items:center;gap:3px;color:var(--ink-3);font-size:11px;font-weight:500;cursor:pointer;border-radius:8px}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-selected="true"]{color:var(--ink)}
+nav.tabs button[aria-selected="true"] svg{stroke:var(--brand)}
+
+/* ---------- blocks ---------- */
+h2.sec{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);margin:20px 0 8px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.stack{display:flex;flex-direction:column;gap:8px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px 11px}
+.tile .n{font-family:var(--display);font-weight:700;font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.tile .l{font-size:11.5px;color:var(--ink-2);margin-top:3px;line-height:1.25}
+.tile.ok .n{color:var(--ok)} .tile.late .n{color:var(--late)} .tile.idle .n{color:var(--ink-2)}
+
+/* employee rows */
+.row{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:var(--surface);
+  border:1px solid var(--line);border-left:4px solid var(--idle);border-radius:var(--r);padding:11px 12px;
+  min-height:60px;cursor:pointer}
+.row[data-s="ok"]{border-left-color:var(--ok)} .row[data-s="late"]{border-left-color:var(--late)}
+.row[data-s="out"]{border-left-color:var(--brand)}
+.row:disabled{cursor:default}
+.who{flex:1;min-width:0}
+.who .nm{font-weight:600;font-size:15.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who .sub{font-size:12.5px;color:var(--ink-2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.time{font-family:var(--display);font-weight:600;font-size:26px;font-variant-numeric:tabular-nums;line-height:1;flex:none;text-align:right}
+.time small{display:block;font-family:var(--body);font-size:11px;font-weight:500;letter-spacing:.02em;margin-top:3px}
+.pill{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.02em}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.late{background:var(--late-bg);color:var(--late)}
+.pill.idle{background:var(--idle-bg);color:var(--idle)}
+.chev{flex:none;color:var(--ink-3);font-size:20px;line-height:1}
+
+/* buttons */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border-radius:var(--r);
+  border:1px solid var(--line);background:var(--surface-2);color:var(--ink);font-weight:600;font-size:16px;cursor:pointer}
+.btn.primary{background:var(--brand);color:var(--brand-ink);border-color:transparent;font-family:var(--display);
+  font-size:21px;letter-spacing:.03em;text-transform:uppercase;min-height:62px}
+.btn.go{background:var(--ok);color:#fff;border-color:transparent;font-family:var(--display);font-size:21px;
+  letter-spacing:.03em;text-transform:uppercase;min-height:62px}
+.btn.sm{min-height:40px;font-size:14px;font-weight:500;padding:0 14px;width:auto}
+.btn:disabled{opacity:.42;cursor:not-allowed}
+.btn.danger{color:var(--late)}
+
+/* forms */
+label.f{display:block;margin-bottom:10px}
+label.f span{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:4px}
+input[type=text],input[type=tel],input[type=number],select{width:100%;min-height:46px;padding:0 11px;border-radius:10px;
+  border:1px solid var(--line);background:var(--surface-2);font-variant-numeric:tabular-nums}
+input[type=time]{min-height:46px;padding:0 11px;border-radius:10px;border:1px solid var(--line);background:var(--surface-2)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.sw:first-child{border-top:0}
+.sw p{margin:0;font-size:12.5px;color:var(--ink-2)}
+.sw b{display:block;font-weight:600;font-size:14.5px;color:var(--ink)}
+input[type=checkbox]{width:44px;height:26px;appearance:none;background:var(--idle-bg);border:1px solid var(--line);
+  border-radius:999px;position:relative;flex:none;cursor:pointer;transition:background .15s}
+input[type=checkbox]:checked{background:var(--ok);border-color:transparent}
+input[type=checkbox]::after{content:"";position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+input[type=checkbox]:checked::after{transform:translateX(18px)}
+.pad{padding:13px}
+.hint{font-size:12.5px;color:var(--ink-2);margin:6px 0 0}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:8px 13px;font-size:13.5px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--brand);color:var(--brand-ink);border-color:transparent;font-weight:600}
+
+/* sheet */
+.veil{position:fixed;inset:0;z-index:50;background:rgba(10,14,18,.55);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;background:var(--surface);border-radius:16px 16px 0 0;border-top:4px solid var(--hivis);
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));max-height:90%;overflow:auto;
+  animation:up .18s ease-out}
+@keyframes up{from{transform:translateY(14px)}to{transform:none}}
+@media (prefers-reduced-motion:reduce){.sheet{animation:none}}
+.sheet-h{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px}
+.sheet-h h3{font-family:var(--display);font-weight:600;font-size:25px;margin:0;flex:1;line-height:1.1}
+.sheet-h .x{background:none;border:0;font-size:26px;line-height:1;color:var(--ink-3);cursor:pointer;padding:0 4px}
+.big{text-align:center;padding:6px 0 4px}
+.big .t{font-family:var(--display);font-weight:700;font-size:64px;line-height:1;font-variant-numeric:tabular-nums}
+.big .s{font-size:14px;margin-top:6px}
+.pin{letter-spacing:.5em;text-align:center;font-size:24px!important}
+
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:600;background:var(--surface-2)}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right}
+.empty{padding:22px 14px;text-align:center;color:var(--ink-2);font-size:13.5px}
+.note{background:var(--late-bg);color:var(--late);border-radius:10px;padding:10px 12px;font-size:12.5px;font-weight:500}
+.info{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;color:var(--ink-2)}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:60;margin:0 auto;
+  max-width:420px;background:var(--ink);color:var(--bg);border-radius:10px;padding:11px 14px;font-size:13.5px;text-align:center;
+  box-shadow:var(--shadow)}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <span class="mark">CB</span>
+    <h1 id="siteName">Chantier Gare SDF</h1>
+    <span class="clock" id="clock">--:--</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="bar">
+    <span class="sync" id="sync"><i class="dot off"></i><span id="syncTxt">Chargement…</span></span>
+    <span id="dateTxt"></span>
+  </div>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" id="tabs">
+  <button data-tab="punch" aria-selected="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>Pointer</button>
+  <button data-tab="today" aria-selected="false"><svg viewBox="0 0 24 24"><path d="M4 19V5M4 19h16"/><path d="M8 19v-6M13 19v-9M18 19v-4"/></svg>Aujourd'hui</button>
+  <button data-tab="hist" aria-selected="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/></svg>Historique</button>
+  <button data-tab="set" aria-selected="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2.2M12 18.3v2.2M4.7 7.8l1.9 1.1M17.4 15.1l1.9 1.1M4.7 16.2l1.9-1.1M17.4 8.9l1.9-1.1"/></svg>Réglages</button>
+</nav>
+
+<script>
+"use strict";
+/* ======================= modèle ======================= */
+const TRANSPORTS = ["RER / Train","Bus","Tram","Métro","Covoiturage","Vélo","À pied","Véhicule"];
+const MOTIFS = ["Train / RER en retard","Bus en retard","Covoiturage en retard","Circulation","Motif personnel","Autre"];
+const DEFAULTS = {
+  site:{name:"Chantier Gare SDF", start:"07:30", tol:10, end:"17:00", lat:null, lng:null, radius:250,
+        requirePin:true, requireGeo:false, saturday:false, adminPin:"1234"},
+  employees:[
+    {id:"e1", name:"Sofiane Benali",  pin:"1111", transport:"RER / Train"},
+    {id:"e2", name:"Marek Kowalski",  pin:"2222", transport:"Bus"},
+    {id:"e3", name:"Ibrahima Diallo", pin:"3333", transport:"Covoiturage"},
+    {id:"e4", name:"Jean-Luc Perret", pin:"4444", transport:"Tram"},
+    {id:"e5", name:"Tony Rossi",      pin:"5555", transport:"À pied"}
+  ],
+  sample:true
+};
+const LS = "chokbeton.pointage.v1";
+let S = load();
+let tab = "punch", adminOk = false, toastT = 0, storageOK = true;
+
+function load(){
+  try{ const raw = localStorage.getItem(LS); if(raw){ const p = JSON.parse(raw);
+    return {site:{...DEFAULTS.site,...(p.site||{})}, employees:p.employees||DEFAULTS.employees,
+            days:p.days||{}, pending:p.pending||[], dirty:p.dirty||{}, sample:p.sample!==false&&!p.employees};
+  }}catch(e){}
+  return {site:{...DEFAULTS.site}, employees:DEFAULTS.employees.map(e=>({...e})), days:{}, pending:[], dirty:{}, sample:true};
+}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(S)); storageOK=true; }
+  catch(e){ storageOK=false; } syncUI(); }
+
+/* ======================= utilitaires ======================= */
+const $ = (s,r=document)=>r.querySelector(s);
+const pad = n=>String(n).padStart(2,"0");
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const dkey = (d=new Date())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const hhmm = d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const toMin = t=>{const[a,b]=String(t||"0:0").split(":").map(Number);return (a||0)*60+(b||0);};
+const dur = m=>{m=Math.round(m);const h=Math.floor(m/60);return h? `${h} h ${pad(m%60)}` : `${m} min`;};
+const lateF = m=>m<90? `${m} min` : dur(m);
+const frDate = k=>{const[y,m,d]=k.split("-").map(Number);
+  return new Date(y,m-1,d).toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});};
+const isWorkday = k=>{const[y,m,d]=k.split("-").map(Number);const w=new Date(y,m-1,d).getDay();
+  return w>=1&&w<=5 || (w===6&&S.site.saturday);};
+function dist(a,b,c,d){ const R=6371000,r=Math.PI/180, dp=(c-a)*r, dl=(d-b)*r;
+  const x=Math.sin(dp/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(dl/2)**2;
+  return Math.round(2*R*Math.asin(Math.sqrt(x))); }
+function toast(msg){ let t=$("#toast"); if(!t){ t=document.createElement("div"); t.id="toast"; t.className="toast"; document.body.appendChild(t);}
+  t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>{t.hidden=true;},3200); }
+const entries = k => S.days[k] || {};
+function status(rec){ // statut d'une arrivée
+  if(!rec) return "none";
+  return rec.delay>0 ? "late" : "ok";
+}
+
+/* ======================= stockage local ======================= */
+function syncUI(){
+  const s=$("#sync"); if(!s) return;
+  const dot=s.querySelector(".dot"), txt=$("#syncTxt");
+  if(!storageOK){ dot.className="dot warn"; txt.textContent="Mémoire du téléphone bloquée"; return; }
+  dot.className="dot"; txt.textContent="Enregistré sur ce téléphone";
+}
+function flush(){}
+function mergeDays(){}
+function download(name, text, type){
+  try{
+    const b=new Blob([text],{type:type||"text/plain;charset=utf-8"});
+    const u=URL.createObjectURL(b), a=document.createElement("a");
+    a.href=u; a.download=name; a.style.display="none"; document.body.appendChild(a); a.click();
+    setTimeout(()=>{ URL.revokeObjectURL(u); a.remove(); }, 2000);
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ======================= géolocalisation ======================= */
+function locate(){
+  return new Promise(res=>{
+    if(!navigator.geolocation) return res(null);
+    let done=false; const t=setTimeout(()=>{ if(!done){done=true;res(null);} }, 9000);
+    navigator.geolocation.getCurrentPosition(
+      p=>{ if(done)return; done=true; clearTimeout(t);
+        res({lat:p.coords.latitude, lng:p.coords.longitude, acc:Math.round(p.coords.accuracy)}); },
+      ()=>{ if(done)return; done=true; clearTimeout(t); res(null); },
+      {enableHighAccuracy:true, timeout:9000, maximumAge:30000});
+  });
+}
+
+/* ======================= enregistrement d'un pointage ======================= */
+function record(emp, kind, pos, motif){
+  const now=new Date(), date=dkey(now), t=hhmm(now);
+  const rec={t, ts:now.toISOString()};
+  if(pos){ rec.lat=+pos.lat.toFixed(6); rec.lng=+pos.lng.toFixed(6); rec.acc=pos.acc;
+    if(S.site.lat!=null && S.site.lng!=null) rec.d=dist(S.site.lat,S.site.lng,pos.lat,pos.lng); }
+  if(kind==="in"){ const late=toMin(t)-toMin(S.site.start); rec.delay=late>S.site.tol?late:0;
+    if(rec.delay && motif) rec.motif=motif; }
+  else { const i=(entries(date)[emp.id]||{}).in; if(i) rec.worked=Math.max(0, toMin(t)-toMin(i.t)); }
+  S.days[date]=S.days[date]||{}; S.days[date][emp.id]={...(S.days[date][emp.id]||{}), [kind]:rec};
+  S.pending.push({op:Date.now()+"-"+emp.id+"-"+kind, date, emp:emp.id, kind, rec});
+  save(); syncUI(); flush();
+  return rec;
+}
+
+/* ======================= vues ======================= */
+function render(){
+  $("#siteName").textContent = S.site.name || "Chantier";
+  const now=new Date();
+  $("#dateTxt").textContent = frDate(dkey(now)).replace(/^./,c=>c.toUpperCase());
+  const v=$("#view");
+  v.innerHTML = tab==="punch" ? viewPunch() : tab==="today" ? viewToday() : tab==="hist" ? viewHist() : viewSet();
+  [...$("#tabs").children].forEach(b=>b.setAttribute("aria-selected", String(b.dataset.tab===tab)));
+  if(tab==="punch") v.querySelectorAll(".row").forEach(r=>r.onclick=()=>sheetPunch(r.dataset.id));
+  if(tab==="set") bindSet();
+  if(tab==="hist") bindHist();
+}
+
+function lineFor(e,k){
+  const en=entries(k)[e.id]||{}, i=en.in, o=en.out;
+  let s="none", time="—", sub="", pill="";
+  if(i){ time=i.t; s=o?"out":status(i);
+    pill = i.delay ? `<span class="pill late">+${lateF(i.delay)}</span>` : `<span class="pill ok">à l'heure</span>`;
+    sub = o ? `Parti à ${o.t} · ${dur(o.worked||0)} sur le chantier`
+            : (i.delay && i.motif ? `Motif : ${esc(i.motif)}` : (i.d!=null ? `À ${i.d} m du chantier` : e.transport||""));
+  } else {
+    const late = isWorkday(k) && toMin(hhmm(new Date()))>toMin(S.site.start)+S.site.tol && k===dkey();
+    pill = late ? `<span class="pill late">non pointé</span>`
+         : isWorkday(k) ? `<span class="pill idle">attendu ${S.site.start}</span>`
+         : `<span class="pill idle">repos</span>`;
+    sub = e.transport ? e.transport+(e.transport==="Véhicule"?"":" — non véhiculé") : "";
+  }
+  return {s, time, sub, pill, i, o};
+}
+
+function viewPunch(){
+  const k=dkey(), now=new Date();
+  const rows = S.employees.map(e=>{ const l=lineFor(e,k);
+    return `<button class="row" data-id="${e.id}" data-s="${l.s}">
+      <span class="who"><span class="nm">${esc(e.name)}</span><span class="sub">${l.pill} ${esc(l.sub)}</span></span>
+      <span class="time"${l.i?"":' style="color:var(--ink-3)"'}>${l.time}<small>${l.o?"départ "+l.o.t:(l.i?"arrivée":"pas pointé")}</small></span>
+      <span class="chev">›</span></button>`; }).join("");
+  const sample = S.sample ? `<p class="info">Équipe d'exemple. Remplacez-la par vos compagnons dans <b>Réglages</b>.</p>` : "";
+  const off = isWorkday(k) ? "" : `<p class="info">Jour non travaillé sur ce chantier : les pointages restent possibles mais aucun retard ni absence n'est décompté.</p>`;
+  const geo = (S.site.lat==null) ? `<p class="info">Position du chantier non enregistrée : ouvrez <b>Réglages</b> depuis le chantier et appuyez sur « Enregistrer ma position ». Sans elle, les pointages sont acceptés mais la présence sur site n'est pas vérifiée.</p>` : "";
+  return `${sample}${off}
+    <h2 class="sec">Badger — ${hhmm(now)} · arrivée prévue ${S.site.start}</h2>
+    <div class="stack">${rows || `<p class="empty">Aucun compagnon. Ajoutez votre équipe dans Réglages.</p>`}</div>
+    ${geo}`;
+}
+
+function viewToday(){
+  const k=dkey(), late=[], ok=[], none=[];
+  S.employees.forEach(e=>{ const i=(entries(k)[e.id]||{}).in;
+    if(!i) none.push(e); else if(i.delay) late.push(e); else ok.push(e); });
+  const list = arr => arr.map(e=>{ const l=lineFor(e,k);
+    return `<div class="row" data-s="${l.s}" style="cursor:default">
+      <span class="who"><span class="nm">${esc(e.name)}</span><span class="sub">${l.pill} ${esc(l.sub)}</span></span>
+      <span class="time"${l.i?"":' style="color:var(--ink-3)"'}>${l.time}<small>${l.o?"départ "+l.o.t:(l.i?"arrivée":"pas pointé")}</small></span></div>`; }).join("");
+  const totLate = late.reduce((a,e)=>a+((entries(k)[e.id]||{}).in?.delay||0),0);
+  return `<div class="tiles">
+      <div class="tile ok"><div class="n">${ok.length}</div><div class="l">à l'heure</div></div>
+      <div class="tile late"><div class="n">${late.length}</div><div class="l">en retard</div></div>
+      <div class="tile idle"><div class="n">${none.length}</div><div class="l">pas encore pointé</div></div>
+    </div>
+    ${late.length?`<p class="note" style="margin-top:10px">${lateF(totLate)} de retard cumulées ce matin.</p>`:""}
+    ${late.length?`<h2 class="sec">En retard</h2><div class="stack">${list(late)}</div>`:""}
+    ${none.length?`<h2 class="sec">Pas encore pointé</h2><div class="stack">${list(none)}</div>`:""}
+    ${ok.length?`<h2 class="sec">À l'heure</h2><div class="stack">${list(ok)}</div>`:""}
+    ${!S.employees.length?`<p class="empty">Ajoutez votre équipe dans Réglages.</p>`:""}`;
+}
+
+function periodDays(n){ const out=[], d=new Date();
+  for(let i=0;i<n;i++){ const k=dkey(d); if(isWorkday(k)) out.push(k); d.setDate(d.getDate()-1); }
+  return out; }
+
+function viewHist(){
+  const days = periodDays(30).filter(k=>Object.keys(entries(k)).length);
+  const per = S.employees.map(e=>{ let nb=0, ret=0, min=0, w=0;
+    days.forEach(k=>{ const en=entries(k)[e.id]||{}; if(en.in){ nb++; if(en.in.delay){ret++;min+=en.in.delay;} }
+      if(en.out&&en.out.worked) w+=en.out.worked; });
+    return {e,nb,ret,min,w}; });
+  const rows = per.map(p=>`<tr><td>${esc(p.e.name)}</td><td class="num">${p.nb}</td>
+      <td class="num" style="${p.ret?'color:var(--late);font-weight:600':''}">${p.ret}</td>
+      <td class="num">${p.min?lateF(p.min):"—"}</td><td class="num">${p.w?dur(p.w):"—"}</td></tr>`).join("");
+  const detail = days.slice(0,10).map(k=>{
+    const en=entries(k), ids=Object.keys(en); if(!ids.length) return "";
+    const li = S.employees.filter(e=>en[e.id]).map(e=>{ const a=en[e.id].in, o=en[e.id].out;
+      return `<tr><td>${esc(e.name)}</td><td>${a?a.t:"—"}</td>
+        <td>${a? (a.delay?`<span class="pill late">+${lateF(a.delay)}</span>`:`<span class="pill ok">ok</span>`) :"—"}</td>
+        <td>${a&&a.motif?esc(a.motif):""}</td><td>${o?o.t:"—"}</td>
+        <td class="num">${o&&o.worked?dur(o.worked):"—"}</td></tr>`; }).join("");
+    return `<h2 class="sec">${frDate(k)}</h2><div class="tw"><table>
+      <thead><tr><th>Compagnon</th><th>Arrivée</th><th>Statut</th><th>Motif</th><th>Départ</th><th class="num">Temps</th></tr></thead>
+      <tbody>${li}</tbody></table></div>`; }).join("");
+  return `<h2 class="sec">30 derniers jours</h2>
+    <div class="tw"><table><thead><tr><th>Compagnon</th><th class="num">Jours</th><th class="num">Retards</th>
+      <th class="num">Cumul</th><th class="num">Temps</th></tr></thead><tbody>${rows||""}</tbody></table></div>
+    ${days.length?"":`<p class="empty">Aucun pointage enregistré pour l'instant.</p>`}
+    <div style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" id="csv">Exporter en CSV</button>
+      <button class="btn sm" id="copy">Copier le récapitulatif</button></div>
+    ${detail}`;
+}
+
+function csvText(){
+  const days = periodDays(60).filter(k=>Object.keys(entries(k)).length).reverse();
+  const L=["Date;Compagnon;Transport;Arrivee;Statut;Retard (min);Motif;Depart;Temps (min);Distance chantier (m)"];
+  days.forEach(k=>S.employees.forEach(e=>{ const en=entries(k)[e.id]; if(!en) return; const a=en.in,o=en.out;
+    L.push([k, e.name, e.transport||"", a?a.t:"", a?(a.delay?"Retard":"A l'heure"):"Absent", a?a.delay||0:"",
+            a&&a.motif?a.motif:"", o?o.t:"", o&&o.worked?o.worked:"", a&&a.d!=null?a.d:""].join(";")); }));
+  return L.join("\n");
+}
+function bindHist(){
+  const c=$("#csv"); if(c) c.onclick=async()=>{
+    const data="﻿"+csvText(), name=`pointage-${(S.site.name||"chantier").toLowerCase().replace(/[^a-z0-9]+/g,"-")}-${dkey()}.csv`;
+    if(download(name, data, "text/csv;charset=utf-8")) return toast("Fichier CSV enregistré.");
+    try{ await navigator.clipboard.writeText(data); toast("CSV copié — collez-le dans un tableur."); }
+    catch(e){ toast("Export indisponible sur ce téléphone."); }
+  };
+  const k=$("#copy"); if(k) k.onclick=async()=>{
+    const d=dkey(), L=[`Pointage ${S.site.name} — ${frDate(d)}`];
+    S.employees.forEach(e=>{ const a=(entries(d)[e.id]||{}).in;
+      L.push(`• ${e.name} : ${a? (a.delay?`${a.t} (+${lateF(a.delay)}${a.motif?", "+a.motif:""})`:`${a.t} à l'heure`) : "pas pointé"}`); });
+    try{ await navigator.clipboard.writeText(L.join("\n")); toast("Récapitulatif copié."); }catch(e){ toast("Copie indisponible."); }
+  };
+}
+
+/* ======================= réglages ======================= */
+function viewSet(){
+  if(!adminOk) return `<h2 class="sec">Accès chef de chantier</h2>
+    <div class="card pad"><label class="f"><span>Code chef</span>
+      <input id="apin" class="pin" type="tel" inputmode="numeric" maxlength="6" autocomplete="off"></label>
+      <button class="btn primary" id="aok">Ouvrir</button>
+      ${S.site.adminPin==="1234"?`<p class="hint">Code par défaut : 1234 — changez-le une fois entré.</p>`:""}</div>`;
+  const emps = S.employees.map(e=>`<div class="row" data-s="none" style="cursor:default">
+      <span class="who"><span class="nm">${esc(e.name)}</span>
+        <span class="sub">Code ${esc(e.pin||"—")} · ${esc(e.transport||"—")}</span></span>
+      <button class="btn sm danger" data-del="${e.id}">Retirer</button></div>`).join("");
+  const s=S.site;
+  return `<h2 class="sec">Équipe (${S.employees.length})</h2>
+    <div class="stack">${emps||`<p class="empty">Aucun compagnon.</p>`}</div>
+    <div class="card pad" style="margin-top:8px">
+      <label class="f"><span>Nom et prénom</span><input id="nName" type="text" placeholder="Ex. Karim Haddad"></label>
+      <div class="grid2">
+        <label class="f"><span>Code à 4 chiffres</span><input id="nPin" type="tel" inputmode="numeric" maxlength="4"></label>
+        <label class="f"><span>Transport</span><select id="nTr">${TRANSPORTS.map(t=>`<option>${t}</option>`).join("")}</select></label>
+      </div>
+      <button class="btn" id="addEmp">Ajouter au chantier</button>
+    </div>
+
+    <h2 class="sec">Horaires</h2>
+    <div class="card pad">
+      <div class="grid2">
+        <label class="f"><span>Arrivée prévue</span><input id="sStart" type="time" value="${s.start}"></label>
+        <label class="f"><span>Fin de poste</span><input id="sEnd" type="time" value="${s.end}"></label>
+      </div>
+      <label class="f"><span>Tolérance avant retard (minutes)</span>
+        <input id="sTol" type="number" min="0" max="60" value="${s.tol}"></label>
+      <div class="sw"><div><b>Samedi travaillé</b><p>Compte le samedi comme jour ouvré</p></div>
+        <input type="checkbox" id="sSat" ${s.saturday?"checked":""}></div>
+    </div>
+
+    <h2 class="sec">Chantier</h2>
+    <div class="card pad">
+      <label class="f"><span>Nom du chantier</span><input id="sName" type="text" value="${esc(s.name)}"></label>
+      <label class="f"><span>Rayon accepté autour du chantier (mètres)</span>
+        <input id="sRad" type="number" min="30" max="2000" step="10" value="${s.radius}"></label>
+      <button class="btn" id="geoSet">Enregistrer ma position comme chantier</button>
+      <p class="hint" id="geoTxt">${s.lat!=null?`Position enregistrée : ${s.lat.toFixed(5)}, ${s.lng.toFixed(5)}`:"Aucune position enregistrée."}</p>
+    </div>
+
+    <h2 class="sec">Contrôles</h2>
+    <div class="card pad">
+      <div class="sw"><div><b>Code personnel obligatoire</b><p>Chaque compagnon saisit ses 4 chiffres</p></div>
+        <input type="checkbox" id="sPin" ${s.requirePin?"checked":""}></div>
+      <div class="sw"><div><b>Position obligatoire</b><p>Refuse le pointage hors du rayon du chantier</p></div>
+        <input type="checkbox" id="sGeo" ${s.requireGeo?"checked":""}></div>
+      <label class="f" style="margin-top:12px"><span>Code chef de chantier</span>
+        <input id="sAdm" type="tel" inputmode="numeric" maxlength="6" value="${esc(s.adminPin)}"></label>
+      <button class="btn" id="saveSet">Enregistrer les réglages</button>
+    </div>
+    <h2 class="sec">Sauvegarde</h2>
+    <div class="card pad">
+      <p class="hint" style="margin:0 0 10px">Les pointages ne sont que dans ce téléphone. Exportez une sauvegarde chaque semaine : le fichier se restaure sur n'importe quel autre téléphone.</p>
+      <div class="stack">
+        <button class="btn" id="bkExp">Exporter une sauvegarde (.json)</button>
+        <button class="btn" id="bkImp">Restaurer une sauvegarde</button>
+        <input type="file" id="bkFile" accept=".json,application/json" hidden>
+      </div>
+      <p class="hint" id="bkTxt">${S.backup?`Dernière sauvegarde : ${frDate(S.backup)}.`:"Aucune sauvegarde exportée."}</p>
+    </div>
+    <p class="info" style="margin-top:14px">Application autonome : aucun compte, aucun serveur, fonctionne sans réseau. Ne videz pas les données du navigateur sur ce téléphone et gardez une sauvegarde à jour.</p>`;
+}
+
+function bindSet(){
+  if(!adminOk){ const go=()=>{ if($("#apin").value.trim()===String(S.site.adminPin)){ adminOk=true; render(); } else toast("Code incorrect."); };
+    $("#aok").onclick=go; $("#apin").onkeydown=e=>{ if(e.key==="Enter") go(); }; return; }
+  $("#addEmp").onclick=()=>{ const n=$("#nName").value.trim(), p=$("#nPin").value.trim();
+    if(!n) return toast("Indiquez le nom du compagnon.");
+    if(S.site.requirePin && !/^\d{4}$/.test(p)) return toast("Code à 4 chiffres requis.");
+    let wiped=0;
+    if(S.sample){ wiped=S.employees.length; const ids=S.employees.map(x=>x.id);
+      for(const d in S.days){ ids.forEach(i=>{ delete S.days[d][i]; });
+        if(!Object.keys(S.days[d]).length) delete S.days[d]; }
+      S.pending=S.pending.filter(o=>!ids.includes(o.emp));
+      S.employees=[]; S.sample=false; }
+    S.employees.push({id:"e"+Date.now().toString(36), name:n, pin:p, transport:$("#nTr").value});
+    S.dirty.employees=1; save(); flush(); render();
+    toast(wiped? `${n} ajouté — équipe d'exemple et ses pointages de test retirés.` : n+" ajouté au chantier."); };
+  $("#view").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{
+    S.employees=S.employees.filter(e=>e.id!==b.dataset.del); S.dirty.employees=1; save(); flush(); render(); });
+  $("#geoSet").onclick=async()=>{ $("#geoTxt").textContent="Localisation en cours…";
+    const p=await locate();
+    if(!p){ $("#geoTxt").textContent="Position indisponible : autorisez la localisation sur ce téléphone."; return; }
+    S.site.lat=+p.lat.toFixed(6); S.site.lng=+p.lng.toFixed(6); S.dirty.site=1; save(); flush();
+    $("#geoTxt").textContent=`Position enregistrée (précision ${p.acc} m).`; toast("Position du chantier enregistrée."); };
+  $("#bkExp").onclick=()=>{
+    const copie={...S}; delete copie.backup;
+    if(!download(`sauvegarde-pointage-${dkey()}.json`, JSON.stringify(copie,null,1), "application/json"))
+      return toast("Export impossible sur ce téléphone.");
+    S.backup=dkey(); save(); $("#bkTxt").textContent=`Dernière sauvegarde : ${frDate(S.backup)}.`;
+    toast("Sauvegarde enregistrée.");
+  };
+  $("#bkImp").onclick=()=>$("#bkFile").click();
+  $("#bkFile").onchange=ev=>{
+    const f=ev.target.files&&ev.target.files[0]; ev.target.value=""; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>restore(String(r.result));
+    r.onerror=()=>toast("Fichier illisible.");
+    r.readAsText(f);
+  };
+  $("#saveSet").onclick=()=>{
+    S.site={...S.site, name:$("#sName").value.trim()||"Chantier", start:$("#sStart").value||"07:30",
+      end:$("#sEnd").value||"17:00", tol:Math.max(0,+$("#sTol").value||0), radius:Math.max(30,+$("#sRad").value||250),
+      saturday:$("#sSat").checked, requirePin:$("#sPin").checked, requireGeo:$("#sGeo").checked,
+      adminPin:$("#sAdm").value.trim()||"1234"};
+    S.dirty.site=1; save(); flush(); render(); toast("Réglages enregistrés."); };
+}
+
+function restore(txt){
+  let p; try{ p=JSON.parse(txt); }catch(e){ return toast("Fichier illisible."); }
+  if(!p || !p.site || !Array.isArray(p.employees)) return toast("Fichier de sauvegarde non reconnu.");
+  const n=Object.keys(p.days||{}).length;
+  if(!confirm(`Restaurer ${p.employees.length} compagnon(s) et ${n} journée(s) de pointage ?\n\nLes données actuelles de ce téléphone seront remplacées.`)) return;
+  S={site:{...DEFAULTS.site,...p.site}, employees:p.employees, days:p.days||{}, pending:[], dirty:{},
+     sample:!!p.sample, backup:p.backup||null};
+  save(); render(); toast("Sauvegarde restaurée.");
+}
+
+/* ======================= feuille de pointage ======================= */
+function closeSheet(){ const v=$("#veil"); if(v) v.remove(); }
+function sheetPunch(id){
+  const e=S.employees.find(x=>x.id===id); if(!e) return;
+  const k=dkey(), en=entries(k)[e.id]||{};
+  const veil=document.createElement("div"); veil.id="veil"; veil.className="veil";
+  veil.innerHTML=`<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-h">
+      <h3>${esc(e.name)}</h3><button class="x" aria-label="Fermer">×</button></div><div id="body"></div></div>`;
+  document.body.appendChild(veil);
+  veil.onclick=ev=>{ if(ev.target===veil) closeSheet(); };
+  veil.querySelector(".x").onclick=closeSheet;
+  step1();
+
+  function step1(){
+    const b=$("#body"), late=toMin(hhmm(new Date()))-toMin(S.site.start);
+    b.innerHTML=`
+      ${en.in?`<p class="info">Arrivée pointée à ${en.in.t}${en.in.delay?` — ${lateF(en.in.delay)} de retard`:" — à l'heure"}${en.out?`, départ à ${en.out.t}.`:"."}</p>`:""}
+      ${S.site.requirePin?`<label class="f"><span>Code personnel</span>
+        <input id="pin" class="pin" type="tel" inputmode="numeric" maxlength="4" autocomplete="off"></label>`:""}
+      ${!en.in?`<p class="hint" style="margin-bottom:8px">Arrivée prévue à ${S.site.start} · il est ${hhmm(new Date())}${late>S.site.tol?` — ${lateF(late)} de retard`:""}</p>`:""}
+      <div class="stack">
+        <button class="btn go" id="bin" ${en.in?"disabled":""}>Pointer l'arrivée</button>
+        <button class="btn primary" id="bout" ${!en.in||en.out?"disabled":""}>Pointer le départ</button>
+      </div>`;
+    if(S.site.requirePin) setTimeout(()=>$("#pin")?.focus(),50);
+    $("#bin").onclick=()=>go("in"); $("#bout").onclick=()=>go("out");
+  }
+  function checkPin(){
+    if(!S.site.requirePin) return true;
+    if(($("#pin").value||"").trim()===String(e.pin||"")) return true;
+    toast("Code incorrect."); return false;
+  }
+  async function go(kind){
+    if(!checkPin()) return;
+    const b=$("#body");
+    b.innerHTML=`<div class="big"><div class="t">${hhmm(new Date())}</div><div class="s">Vérification de la position…</div></div>`;
+    const pos=await locate();
+    let d=null;
+    if(pos && S.site.lat!=null) d=dist(S.site.lat,S.site.lng,pos.lat,pos.lng);
+    if(S.site.requireGeo){
+      if(!pos){ b.innerHTML=`<p class="note">Position indisponible. Le pointage est bloqué car la position est obligatoire — autorisez la localisation ou faites lever l'obligation par le chef de chantier.</p>
+        <button class="btn" id="back" style="margin-top:10px">Retour</button>`; $("#back").onclick=step1; return; }
+      if(d!=null && d>S.site.radius){ b.innerHTML=`<p class="note">Vous êtes à ${d} m du chantier (rayon autorisé : ${S.site.radius} m). Pointage refusé.</p>
+        <button class="btn" id="back" style="margin-top:10px">Retour</button>`; $("#back").onclick=step1; return; }
+    }
+    const late = kind==="in" ? Math.max(0, toMin(hhmm(new Date()))-toMin(S.site.start)) : 0;
+    if(kind==="in" && late>S.site.tol) return stepMotif(pos,d,late);
+    finish(record(e,kind,pos,null), kind, d);
+  }
+  function stepMotif(pos,d,late){
+    const b=$("#body");
+    b.innerHTML=`<div class="big"><div class="t">${hhmm(new Date())}</div>
+        <div class="s" style="color:var(--late);font-weight:600">${lateF(late)} de retard — arrivée prévue ${S.site.start}</div></div>
+      <h2 class="sec">Motif du retard</h2><div class="chips" id="mot">
+        ${MOTIFS.map(m=>`<button class="chip" aria-pressed="false" data-m="${esc(m)}">${esc(m)}</button>`).join("")}</div>
+      <button class="btn go" id="val" style="margin-top:12px" disabled>Valider l'arrivée</button>
+      <button class="btn sm" id="skip" style="margin-top:8px;width:100%">Valider sans motif</button>`;
+    let motif=null;
+    b.querySelectorAll("[data-m]").forEach(c=>c.onclick=()=>{
+      b.querySelectorAll("[data-m]").forEach(o=>o.setAttribute("aria-pressed","false"));
+      c.setAttribute("aria-pressed","true"); motif=c.dataset.m; $("#val").disabled=false; });
+    $("#val").onclick=()=>finish(record(e,"in",pos,motif),"in",d);
+    $("#skip").onclick=()=>finish(record(e,"in",pos,null),"in",d);
+  }
+  function finish(rec,kind,d){
+    const b=$("#body"), ok=kind==="in" && !rec.delay;
+    b.innerHTML=`<div class="big"><div class="t" style="color:${ok?"var(--ok)":kind==="out"?"var(--brand)":"var(--late)"}">${rec.t}</div>
+        <div class="s">${kind==="out"
+          ? `Départ enregistré${rec.worked?` — ${dur(rec.worked)} sur le chantier`:""}`
+          : rec.delay ? `Arrivée enregistrée — ${lateF(rec.delay)} de retard${rec.motif?`<br>Motif : ${esc(rec.motif)}`:""}`
+                      : "Arrivée enregistrée — à l'heure"}</div>
+        <div class="s" style="color:var(--ink-3)">${d!=null?`Position vérifiée : ${d} m du chantier`
+          : rec.lat!=null?"Position relevée (chantier non défini)":"Position non vérifiée"}</div></div>
+      <button class="btn primary" id="done" style="margin-top:6px">Terminé</button>`;
+    $("#done").onclick=()=>{ closeSheet(); render(); };
+    render();
+  }
+}
+
+/* ======================= démarrage ======================= */
+$("#tabs").onclick=ev=>{ const b=ev.target.closest("button"); if(!b) return;
+  tab=b.dataset.tab; closeSheet(); render(); };
+function tick(){ $("#clock").textContent=hhmm(new Date()); }
+tick(); setInterval(tick,20000); setInterval(()=>{ if(tab==="punch"||tab==="today") render(); }, 60000);
+render(); syncUI();
+if(location.protocol==="http:"||location.protocol==="https:") navigator.serviceWorker?.register("sw.js").catch(()=>{});
+</script>
+
+</body>
+</html>

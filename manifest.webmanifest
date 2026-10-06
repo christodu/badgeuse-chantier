@@ -1,0 +1,16 @@
+{
+  "name": "Pointage chantier",
+  "short_name": "Pointage",
+  "description": "Badgeuse de chantier : arrivees, departs et retards.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E4E7EA",
+  "theme_color": "#1B3B5F",
+  "lang": "fr",
+  "icons": [
+    { "src": "icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
